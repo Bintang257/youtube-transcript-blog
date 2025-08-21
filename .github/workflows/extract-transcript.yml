@@ -1,0 +1,30 @@
+name: Extract YouTube Transcript
+on:
+  workflow_dispatch:
+    inputs:
+      video_url:
+        description: 'YouTube Video URL'
+        required: true
+      language:
+        description: 'Language Code (e.g., en, id)'
+        default: 'en'
+jobs:
+  extract-transcript:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.9'
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install youtube-transcript-api
+      - name: Extract transcript
+        run: |
+          python -c "from youtube_transcript_api import YouTubeTranscriptApi; import re; import os; video_id = re.search(r'(?:youtube\.com\/(?:watch\?v=|embed\/|v\/|shorts\/)|youtu\.be\/)([^&\n?#]+)', '${{ github.event.inputs.video_url }}').group(1); transcript = YouTubeTranscriptApi.get_transcript(video_id, languages=['${{ github.event.inputs.language }}']); formatted_transcript = '\n'.join([f'[{int(t[\"start\"])//3600:02d}:{(int(t[\"start\"])%3600)//60:02d}:{int(t[\"start\"])%60:02d}] {t[\"text\"]}' for t in transcript]); date = os.popen('date -I').read().strip(); with open(f'_posts/{date}-transcript-{video_id}.md', 'w') as f: f.write(f'---\\nlayout: post\\ntitle: \"Transcript for {video_id}\"\\ndate: {date}\\ncategories: transcript\\n---\\n{formatted_transcript}')'"
+      - name: Commit changes
+        uses: stefanzweifel/git-auto-commit-action@v4
+        with:
+          commit_message: Add transcript for ${{ github.event.inputs.video_url }}
