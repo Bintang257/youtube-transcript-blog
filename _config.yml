@@ -1,0 +1,7 @@
+title: YouTube Transcript Blog
+description: Koleksi transkrip video YouTube
+theme: minima
+url: "https://Bintang257.github.io/youtube-transcript-blog"
+plugins:
+  - jekyll-feed
+  - jekyll-seo-tag
